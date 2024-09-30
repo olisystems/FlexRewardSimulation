@@ -8,7 +8,6 @@ class FlexibilityCalculator:
         weights = {
             'time_flexibility': 0.4,
             'power_flexibility': 0.3,
-            'interruptibility': 0.2,
         }
 
         time_flexibility = (request.requested_leave_time - request.charging_start_time).total_seconds() / 3600  # Hours

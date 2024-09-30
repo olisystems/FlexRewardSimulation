@@ -36,8 +36,6 @@ class FlexibilitySimulation:
         # Check for an available connector
         accepted, id = self.find_available_connector(request)
         if accepted:
-            # self.connector_available[connector_index].assign_request(request)
-            # print("shoullllllld be false, ", self.connector_available[connector_index].isAvailable())
             print(f"Request from {request.session_id} accepted for charging on connector {id}.")
             return True, id
         else:
