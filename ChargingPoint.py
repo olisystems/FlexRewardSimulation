@@ -6,12 +6,12 @@ class ChargingPoint:
 
   def assign_request(self, request):
     self.current_request = request
-    self.available = False
 
   def finish_charging(self):
     self.current_request = None
-    self.available = True
-    
+  
+  def setAvailable(self,val):
+    self.available = val
+
   def isAvailable(self):
-    print(self.id, " is Available")
     return self.available

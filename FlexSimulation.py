@@ -1,3 +1,4 @@
+
 from datetime import timedelta, datetime
 from typing import List
 from CarSpecs import CarSpecs
@@ -5,22 +6,22 @@ from FlexibilityRequest import AvailableFlexibilityRequest
 from FlexibilityCalculator import FlexibilityCalculator
 from ChargingPoint import ChargingPoint
 from multiprocessing import Process, Manager
-
+import time
 
 class FlexibilitySimulation:
-    def __init__(self, total_electricity, lock, power_supply: float, nominal_power_cp: float, time_step: int, connectors):
+    def __init__(self, total_electricity, lock, power_supply: float, nominal_power_cp: float, time_step: int, connectors, connectors_in_use):
         self.lock = lock
         self.total_electricity = total_electricity
         self.power_supply = power_supply
         self.nominal_power_cp = nominal_power_cp
         self.time_step = time_step
-        self.connector_available = connectors  # Shared list of connectors
-        self.pending_requests = []
-        self.charging_finished = []
+        self.connector_available: List[ChargingPoint] = connectors  # Shared list of connectors
+        self.connector_in_use: List[ChargingPoint] = connectors_in_use 
+        self.pending_requests = []  # List of pending requests
         self.current_time = datetime.now()
 
     def handle_request(self, request: AvailableFlexibilityRequest):
-        """ Handle the incoming flexibility request with constraints """
+        """Handle the incoming flexibility request with constraints"""
         # Constraint 1: Check if the request exceeds the power grid capacity
         if request.requested_energy > self.power_supply:
             print(f"Request from {request.session_id} rejected: exceeds power grid capacity.")
@@ -32,42 +33,37 @@ class FlexibilitySimulation:
             print(f"Request from {request.session_id} rejected: requested energy exceeds connector's capability.")
             return False, None
 
-        # Constraint 3: Check if the request can be fulfilled now or in the future
-        projected_energy = self.total_electricity.value + request.requested_energy + sum(r.requested_energy for r in self.pending_requests)
-        if projected_energy > self.power_supply:
-            print(f"Request from {request.session_id} rejected: energy requirements cannot be fulfilled.")
-            return False, None
-
-        # Check if any connector is available, if so start charging
-        available_connector_index = self.find_available_connector()
-
-        if available_connector_index is not None:
-            print(f"Request from {request.session_id} accepted for charging on connector {self.connector_available[available_connector_index].id}.")
-            return True, available_connector_index
+        # Check for an available connector
+        accepted, id = self.find_available_connector(request)
+        if accepted:
+            # self.connector_available[connector_index].assign_request(request)
+            # print("shoullllllld be false, ", self.connector_available[connector_index].isAvailable())
+            print(f"Request from {request.session_id} accepted for charging on connector {id}.")
+            return True, id
         else:
-            self.pending_requests.append(request)
             print(f"Request from {request.session_id} is pending due to no available connectors.")
+            self.pending_requests.append(request)
             return False, None
 
-    def find_available_connector(self):
+    def find_available_connector(self, request: AvailableFlexibilityRequest):
         """Find an available connector if any"""
-        with self.lock:  # Locking to ensure safe access
-            for i in range(len(self.connector_available)):
+          # Locking to ensure safe access to connector list
+        for i in range(len(self.connector_available)):
+          with self.lock:
                 if self.connector_available[i].isAvailable():
-                    return i
-        return None
+                    id = self.connector_available[i].id
+                    self.connector_available[i].assign_request(request)
+                    self.connector_available[i].setAvailable(False)
+                    self.connector_available.pop(i)
+                    self.connector_in_use.append(self.connector_available[i])
+                    return True, id
+        return False, None
 
-    def simulate_charging(self, request: AvailableFlexibilityRequest, connector_index: int):
-        with self.lock:  # Locking before modifying the connector
-            if self.connector_available[connector_index].isAvailable():
-                self.connector_available[connector_index].assign_request(request)
-            else:
-                print(f"Connector {connector_index} is not available for {request.session_id}.")
-                return
-
+    def simulate_charging(self, request: AvailableFlexibilityRequest, id: int):
         remaining_energy = request.requested_energy
         total_charging_time = (remaining_energy / self.nominal_power_cp) * 60  # in minutes
 
+        
         while total_charging_time > 0 and remaining_energy > 0:
             charging_duration = min(self.time_step, total_charging_time)
             energy_charged = (charging_duration / 60) * self.nominal_power_cp
@@ -76,15 +72,19 @@ class FlexibilitySimulation:
                 energy_charged = remaining_energy
             remaining_energy -= energy_charged
 
-            with self.lock:  # Locking shared resource
+            time.sleep(1)
+            
+            # Update shared resource (total electricity used) with a lock
+            with self.lock:
                 self.total_electricity.value += energy_charged
 
             # Calculate current SOC
             charged_soc = (energy_charged / request.car_specs.battery_capacity_in_kwh) * 100
             request.current_soc += charged_soc
+            
 
             # Print log with current SOC and power grid energy
-            print(f"Charging session for {request.session_id} on connector {self.connector_available[connector_index].id}: {energy_charged:.2f} kWh charged.")
+            print(f"Charging session for {request.session_id} on connector {id}: {energy_charged:.2f} kWh charged.")
             print(f"Current SOC: {request.current_soc:.2f}%, Battery Power at Current Time: {(request.current_soc/100)*request.car_specs.battery_capacity_in_kwh}")
             print(f"Current Power Grid Energy Used: {self.total_electricity.value:.2f} kWh\n")
 
@@ -95,32 +95,49 @@ class FlexibilitySimulation:
                 print("Exceeded power supply. Stopping charging.")
                 break
 
-        with self.lock:  # Locking before finishing charging
-            self.charging_finished.append(request)
-            self.connector_available[connector_index].finish_charging()
+        with self.lock:  # Lock before marking the connector as available
+            connector_in_use_index = -1
+            for i in range(len(self.connector_in_use)):
+                if self.connector_in_use[i].id == id:
+                    connector_in_use_index = i
+                    break
+            self.connector_in_use[connector_in_use_index].finish_charging()
+            self.connector_in_use[connector_in_use_index].setAvailable(True)
+            self.connector_available.append(self.connector_in_use[connector_in_use_index])
+            self.connector_in_use.pop(connector_in_use_index)
 
-            if request in self.pending_requests:
-                self.pending_requests.remove(request)
-                print(f"Request from {request.session_id} has been removed from the pending queue after completion.")
+        print(f"Request from {request.session_id} on connector {id} completed.")
+
+        # Process any pending requests now that this connector is available
+        self.process_pending_requests()
+    
 
     def process_pending_requests(self):
+        """Process requests in the pending queue"""
         if self.pending_requests:
+            # Sort pending requests based on flexibility contribution
             self.pending_requests.sort(key=lambda x: FlexibilityCalculator.calculate_flexibility_contribution(x), reverse=True)
             next_request = self.pending_requests.pop(0)
-            self.handle_request(next_request)
+            accepted, connector_index = self.handle_request(next_request)
+            if accepted:
+                # Create a process to charge the next request
+                p = Process(target=self.simulate_charging, args=(next_request, connector_index))
+                p.start()
 
     def run_simulation(self, requests: List[AvailableFlexibilityRequest]):
         processes = []
         for request in requests:
-            accepted, connector_index = self.handle_request(request)
+            accepted, id = self.handle_request(request)
             # Ensure that the request can be accepted based on constraints
             if accepted is True:
-                p = Process(target=self.simulate_charging, args=(request, connector_index))
+                p = Process(target=self.simulate_charging, args=(request, id))
                 processes.append(p)
                 p.start()
 
         for p in processes:
             p.join()
+            
+    
 
 if __name__ == '__main__':
     with Manager() as manager:
@@ -130,6 +147,7 @@ if __name__ == '__main__':
 
         # Create shared list of connectors
         connectors = manager.list([ChargingPoint(i + 1) for i in range(num_connectors)])  # Shared list of connectors
+        connectors_in_use = manager.list([])  # Shared list to track connectors in use
         power_supply = 30.0  # Total available power supply in kWh
         nominal_power_cp = 11.0  # Nominal charging power in kWh
         time_step = 10  # Time step in minutes
@@ -156,7 +174,9 @@ if __name__ == '__main__':
             current_soc=75,  # Starting SOC in percentage
             car_specs=car2,
         )
+        
 
-        requests = [request1, request2]
-        simulation = FlexibilitySimulation(total_electricity, lock, power_supply, nominal_power_cp, time_step, connectors)
+        requests = [request1,request2]
+        simulation = FlexibilitySimulation(total_electricity, lock, power_supply, nominal_power_cp, time_step, connectors, connectors_in_use)
         simulation.run_simulation(requests)
+
