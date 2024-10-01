@@ -27,7 +27,7 @@ class FlexibilitySimulation:
             print(f"Request from {request.session_id} rejected: exceeds power grid capacity.")
             return False, None
 
-        # Constraint 2: Check if connector's charging capacity * duration < requested energy
+        # Constraint 2: Check if connector's charging capacity * duration < requested energy -- filter out the unrealistic charging request
         charging_duration = (request.requested_leave_time - request.charging_start_time).total_seconds() / 3600  # in hours
         if (self.nominal_power_cp * charging_duration) < request.requested_energy:
             print(f"Request from {request.session_id} rejected: requested energy exceeds connector's capability.")
