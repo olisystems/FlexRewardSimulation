@@ -1,4 +1,3 @@
-
 from datetime import timedelta, datetime
 from typing import List
 from CarSpecs import CarSpecs
@@ -19,6 +18,9 @@ class FlexibilitySimulation:
         self.connector_in_use: List[ChargingPoint] = connectors_in_use 
         self.pending_requests = []  # List of pending requests
         self.current_time = datetime.now()
+    
+    def get_nominal_power_cp(self):
+        return self.nominal_power_cp
 
     def handle_request(self, request: AvailableFlexibilityRequest):
         """Handle the incoming flexibility request with constraints"""
@@ -45,50 +47,76 @@ class FlexibilitySimulation:
 
     def find_available_connector(self, request: AvailableFlexibilityRequest):
         """Find an available connector if any"""
-          # Locking to ensure safe access to connector list
+        # Locking to ensure safe access to connector list
         for i in range(len(self.connector_available)):
-          with self.lock:
+            with self.lock:
                 if self.connector_available[i].isAvailable():
                     id = self.connector_available[i].id
                     self.connector_available[i].assign_request(request)
                     self.connector_available[i].setAvailable(False)
-                    self.connector_available.pop(i)
-                    self.connector_in_use.append(self.connector_available[i])
+                    going_for_reservation=self.connector_available.pop(i)
+                    self.connector_in_use.append(going_for_reservation)
                     return True, id
-        return False, None
+                else: 
+                    return False, None
 
     def simulate_charging(self, request: AvailableFlexibilityRequest, id: int):
         remaining_energy = request.requested_energy
         total_charging_time = (remaining_energy / self.nominal_power_cp) * 60  # in minutes
-
         
+        ft= FlexibilityCalculator.calculate_time_flexibility(request, self.nominal_power_cp)
+        fp = FlexibilityCalculator.calculate_power_flexibility(request,self.nominal_power_cp)
+        print("Time Flex= ",ft,"  Power Flex= ", fp)
         while total_charging_time > 0 and remaining_energy > 0:
+            # Ensure we are only charging the required energy or what the grid can provide
             charging_duration = min(self.time_step, total_charging_time)
             energy_charged = (charging_duration / 60) * self.nominal_power_cp
 
+            # Check if the grid has enough energy
+            with self.lock:
+                available_grid_energy = self.power_supply - self.total_electricity.value
+
+            if available_grid_energy <= 0:
+                print(f"Insufficient grid energy. Stopping charging for {request.session_id} on connector {id}.")
+                break
+
+            # If grid has less energy than required for this timestep, charge only with available energy
+            if available_grid_energy < energy_charged:
+                energy_charged = available_grid_energy
+
+            # Ensure we don't charge more than the remaining energy requested by the car
             if remaining_energy < energy_charged:
                 energy_charged = remaining_energy
+
+            # Deduct the energy being charged from the remaining energy required by the car
             remaining_energy -= energy_charged
 
-            time.sleep(1)
-            
+            time.sleep(1)  # Simulate the passage of time during charging
+
             # Update shared resource (total electricity used) with a lock
             with self.lock:
                 self.total_electricity.value += energy_charged
 
             # Calculate current SOC
             charged_soc = (energy_charged / request.car_specs.battery_capacity_in_kwh) * 100
-            request.current_soc += charged_soc
+            request.initial_soc += charged_soc
             
+            # Ensure the SOC does not exceed 100%
+            if request.initial_soc > 100:
+                request.initial_soc = 100
 
+            # Log the timestamp for each charging step
+            current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            
             # Print log with current SOC and power grid energy
-            print(f"Charging session for {request.session_id} on connector {id}: {energy_charged:.2f} kWh charged.")
-            print(f"Current SOC: {request.current_soc:.2f}%, Battery Power at Current Time: {(request.current_soc/100)*request.car_specs.battery_capacity_in_kwh}")
+            print(f"[{current_timestamp}] Charging session for {request.session_id} on connector {id}: {energy_charged:.2f} kWh charged.")
+            print(f"Current SOC: {request.initial_soc:.2f}%, Battery Power at Current Time: {(request.initial_soc / 100) * request.car_specs.battery_capacity_in_kwh:.2f} kWh")
             print(f"Current Power Grid Energy Used: {self.total_electricity.value:.2f} kWh\n")
 
             total_charging_time -= charging_duration
             self.current_time += timedelta(minutes=charging_duration)
 
+            # Check if the grid has been exceeded
             if self.total_electricity.value > self.power_supply:
                 print("Exceeded power supply. Stopping charging.")
                 break
@@ -108,7 +136,7 @@ class FlexibilitySimulation:
 
         # Process any pending requests now that this connector is available
         self.process_pending_requests()
-    
+
 
     def process_pending_requests(self):
         """Process requests in the pending queue"""
@@ -145,20 +173,21 @@ if __name__ == '__main__':
 
         # Create shared list of connectors
         connectors = manager.list([ChargingPoint(i + 1) for i in range(num_connectors)])  # Shared list of connectors
+        # print(connectors[0].nominal_power_cp)
         connectors_in_use = manager.list([])  # Shared list to track connectors in use
-        power_supply = 30.0  # Total available power supply in kWh
-        nominal_power_cp = 11.0  # Nominal charging power in kWh
-        time_step = 10  # Time step in minutes
+        power_supply = 40.0  # Total available power supply in kWh
+        nominal_power_cp = 10.0  # Nominal charging power in kWh
+        time_step = 15  # Time step in minutes
 
         # Example simulation usage
-        car1 = CarSpecs(make="Tesla", model="Model S", year=2022, battery_capacity_in_kwh=75.5)
+        car1 = CarSpecs(make="Tesla", model="Model S", year=2022, battery_capacity_in_kwh=100)
         request1 = AvailableFlexibilityRequest(
             session_id="user1",
             evse_id="EVSE001",
-            requested_energy=20.0,
+            requested_energy=10.0,
             requested_leave_time=datetime.now() + timedelta(hours=3),
             charging_start_time=datetime.now(),
-            current_soc=50.0,  # Starting SOC in percentage
+            initial_soc=50.0,  # Starting SOC in percentage
             car_specs=car1,
         )
 
@@ -169,12 +198,24 @@ if __name__ == '__main__':
             requested_energy=10.0,
             requested_leave_time=datetime.now() + timedelta(hours=3),
             charging_start_time=datetime.now(),
-            current_soc=75,  # Starting SOC in percentage
+            initial_soc=50,  # Starting SOC in percentage
             car_specs=car2,
         )
         
-
-        requests = [request1,request2]
+        car3 = CarSpecs(make="Tesla", model="Model Z", year=2022, battery_capacity_in_kwh=100)
+        request3 = AvailableFlexibilityRequest(
+            session_id="user3",
+            evse_id="EVSE001",
+            requested_energy=10.0,
+            requested_leave_time=datetime.now() + timedelta(hours=3),
+            charging_start_time=datetime.now(),
+            initial_soc=50,  # Starting SOC in percentage
+            car_specs=car2,
+        )
+        
+        requests = [request1,request2,request3]
         simulation = FlexibilitySimulation(total_electricity, lock, power_supply, nominal_power_cp, time_step, connectors, connectors_in_use)
         simulation.run_simulation(requests)
+
+
 
