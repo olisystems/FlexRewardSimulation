@@ -28,7 +28,8 @@ class AvailableFlexibilityRequest:
         self.__charge_complete = False
         self.__time_flexibility = 0
         self.__power_flexibility = 0
-        self.__flexibility_contribution =0
+        self.__flexibility_contribution = 0
+        self.__flexibility_contribution_per_timestep = []
 
         # Validation when object is created
         self.__validate_requested_energy()
@@ -81,7 +82,7 @@ class AvailableFlexibilityRequest:
         return self.__power_flexibility
     
     @property
-    def flex_contribution(self):
+    def flexibility_contribution(self):
         return self.__flexibility_contribution
     
     # create a setter for charged_time
@@ -94,6 +95,9 @@ class AvailableFlexibilityRequest:
         return self.__target_soc
 
     @property
+    def flexibility_contribution_per_timestep(self):
+        return self.__flexibility_contribution_per_timestep
+    @property
     def car_specs(self):
         return self.__car_specs
 
@@ -101,6 +105,11 @@ class AvailableFlexibilityRequest:
     @charged_energy.setter
     def charged_energy(self, charged_energy):
         self.__charged_energy = charged_energy
+        
+    @flexibility_contribution.setter
+    def flexibility_contribution(self, contribution):
+        self.__flexibility_contribution = contribution
+        
     # Validation for requested energy
     def __validate_requested_energy(self):
         if self.__requested_energy <= 0:

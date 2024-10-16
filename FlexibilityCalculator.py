@@ -19,9 +19,9 @@ class FlexibilityCalculator:
         charged_time_delta = timedelta(minutes=charged_time_in_minutes)
 
         # Calculate the charging duration in minutes
-        charging_duration = (charging_request.requested_leave_time - charging_request.arrival_time - charged_time_delta).total_seconds() / 60
+        remaining_chraging_time = (charging_request.requested_leave_time - charging_request.arrival_time - charged_time_delta).total_seconds() / 60
         required_charging_time = ((charging_request.requested_energy - charging_request.charged_energy) /nominal_power_cp) * 60  # in minutes
-        flexibility = charging_duration - required_charging_time
+        flexibility = remaining_chraging_time - required_charging_time
         return flexibility
 
     @staticmethod
