@@ -5,7 +5,8 @@ from CarSpecs import CarSpecs
 from FlexibilityRequest import AvailableFlexibilityRequest
 from FlexibilityCalculator import FlexibilityCalculator
 from ChargingPoint import ChargingPoint
-
+import random
+import math
 
 class FlexibilitySimulation:
     def __init__(self, power_supply: float, time_step: int):
@@ -171,7 +172,13 @@ class FlexibilitySimulation:
         for request in self.queued_requests:
             request.charged_time += self.time_step
         print(f"Time: {self.current_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        self.update_power_supply()
         print("-----")
+        
+    def update_power_supply(self):
+        random_power_supply = math.floor(random.uniform(30, 40))
+        self.power_supply = random_power_supply
+        print(f"Power Supply Updated to {self.power_supply} kW")
 
     def handle_new_requests(self):
         """Checks and adds any pending requests that have arrived."""
@@ -274,39 +281,39 @@ if __name__ == '__main__':
     num_connectors = 4
     connectors = [ChargingPoint(i + 1) for i in range(num_connectors)]
     connectors_in_use = []
-    power_supply = 40.0
+    power_supply = 33.0
     time_step = 15
 
-    # car1 = CarSpecs(make="Tesla", model="Model S", year=2022, battery_capacity_in_kwh=100, initial_soc=50)
-    # request1 = AvailableFlexibilityRequest("user1", connectors[0], 20.0, datetime.now() + timedelta(hours=3), datetime.now(), car1, 0, 0)
-
-    # car2 = CarSpecs(make="Tesla", model="Model X", year=2022, battery_capacity_in_kwh=100, initial_soc=50)
-    # request2 = AvailableFlexibilityRequest("user2", connectors[1], 11.0, datetime.now() + timedelta(hours=1),  datetime.now(), car2, 0, 0)
-
-    # car3 = CarSpecs(make="Tesla", model="Model Z", year=2022, battery_capacity_in_kwh=100, initial_soc=50)
-    # request3 = AvailableFlexibilityRequest("user3", connectors[2], 24.0, datetime.now() + timedelta(hours=4.25),  datetime.now()+timedelta(hours=0.25), car3, 0, 0)
-
-    # car4 = CarSpecs(make="Tesla", model="Model A", year=2022, battery_capacity_in_kwh=100, initial_soc=50)
-    # request4 = AvailableFlexibilityRequest("user4", connectors[3], 30.0, datetime.now() + timedelta(hours=3.5),  datetime.now()+timedelta(hours=0.5), car4, 0, 0)
-
     car1 = CarSpecs(make="Tesla", model="Model S", year=2022, battery_capacity_in_kwh=100, initial_soc=50)
-    request1 = AvailableFlexibilityRequest("user1", connectors[0], 11.0, datetime.now() + timedelta(hours=1.5), datetime.now(), car1, 0, 0)
+    request1 = AvailableFlexibilityRequest("user1", connectors[0], 20.0, datetime.now() + timedelta(hours=3), datetime.now(), car1, 0, 0)
 
     car2 = CarSpecs(make="Tesla", model="Model X", year=2022, battery_capacity_in_kwh=100, initial_soc=50)
     request2 = AvailableFlexibilityRequest("user2", connectors[1], 11.0, datetime.now() + timedelta(hours=1),  datetime.now(), car2, 0, 0)
 
     car3 = CarSpecs(make="Tesla", model="Model Z", year=2022, battery_capacity_in_kwh=100, initial_soc=50)
-    request3 = AvailableFlexibilityRequest("user3", connectors[2], 11.0, datetime.now() + timedelta(hours=1),  datetime.now(), car3, 0, 0)
+    request3 = AvailableFlexibilityRequest("user3", connectors[2], 24.0, datetime.now() + timedelta(hours=4.25),  datetime.now()+timedelta(hours=0.25), car3, 0, 0)
 
     car4 = CarSpecs(make="Tesla", model="Model A", year=2022, battery_capacity_in_kwh=100, initial_soc=50)
-    request4 = AvailableFlexibilityRequest("user4", connectors[3], 11.0, datetime.now() + timedelta(hours=1),  datetime.now(), car4, 0, 0)
+    request4 = AvailableFlexibilityRequest("user4", connectors[3], 30.0, datetime.now() + timedelta(hours=3.5),  datetime.now()+timedelta(hours=0.5), car4, 0, 0)
+
+    # car1 = CarSpecs(make="Tesla", model="Model S", year=2022, battery_capacity_in_kwh=100, initial_soc=50)
+    # request1 = AvailableFlexibilityRequest("user1", connectors[0], 11.0, datetime.now() + timedelta(hours=1.5), datetime.now(), car1, 0, 0)
+
+    # car2 = CarSpecs(make="Tesla", model="Model X", year=2022, battery_capacity_in_kwh=100, initial_soc=50)
+    # request2 = AvailableFlexibilityRequest("user2", connectors[1], 11.0, datetime.now() + timedelta(hours=1),  datetime.now(), car2, 0, 0)
+
+    # car3 = CarSpecs(make="Tesla", model="Model Z", year=2022, battery_capacity_in_kwh=100, initial_soc=50)
+    # request3 = AvailableFlexibilityRequest("user3", connectors[2], 11.0, datetime.now() + timedelta(hours=1),  datetime.now(), car3, 0, 0)
+
+    # car4 = CarSpecs(make="Tesla", model="Model A", year=2022, battery_capacity_in_kwh=100, initial_soc=50)
+    # request4 = AvailableFlexibilityRequest("user4", connectors[3], 11.0, datetime.now() + timedelta(hours=1),  datetime.now(), car4, 0, 0)
 
     simulation = FlexibilitySimulation(power_supply, time_step)
     simulation.run_simulation([request1, request2, request3, request4])
     
     
-    # print("Flexibility Contribution Request 1 : ",request1.flexibility_contribution)
-    # print("Flexibility Contribution Request 2 : ",request2.flexibility_contribution)
-    # print("Flexibility Contribution Request 3 : ",request3.flexibility_contribution)
-    # print("Flexibility Contribution Request 4 : ",request4.flexibility_contribution)
+    print("Flexibility Contribution Request 1 : ",request1.flexibility_contribution)
+    print("Flexibility Contribution Request 2 : ",request2.flexibility_contribution)
+    print("Flexibility Contribution Request 3 : ",request3.flexibility_contribution)
+    print("Flexibility Contribution Request 4 : ",request4.flexibility_contribution)
 
