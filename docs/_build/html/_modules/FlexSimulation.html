@@ -1,0 +1,470 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlexSimulation &mdash; Flex Simulation 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=8d563738"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Flex Simulation
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">simulation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Flex Simulation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">FlexSimulation</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for FlexSimulation</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">CarSpecs</span> <span class="kn">import</span> <span class="n">CarSpecs</span>
+<span class="kn">from</span> <span class="nn">FlexibilityRequest</span> <span class="kn">import</span> <span class="n">AvailableFlexibilityRequest</span>
+<span class="kn">from</span> <span class="nn">FlexibilityCalculator</span> <span class="kn">import</span> <span class="n">FlexibilityCalculator</span>
+<span class="kn">from</span> <span class="nn">ChargingPoint</span> <span class="kn">import</span> <span class="n">ChargingPoint</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">FlexUtils</span> <span class="kn">import</span> <span class="n">generate_random_car</span><span class="p">,</span> <span class="n">generate_random_request</span><span class="p">,</span> <span class="n">generate_random_requests</span>
+<span class="kn">from</span> <span class="nn">PlottingUtils</span> <span class="kn">import</span> <span class="n">PlottingUtils</span> 
+<span class="kn">import</span> <span class="nn">copy</span>
+
+<div class="viewcode-block" id="FlexibilitySimulation">
+<a class="viewcode-back" href="../FlexSimulation.html#FlexSimulation.FlexibilitySimulation">[docs]</a>
+<span class="k">class</span> <span class="nc">FlexibilitySimulation</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">power_supply</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">time_step</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the FlexibilitySimulation instance.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            power_supply (float): The total available power supply for the simulation.</span>
+<span class="sd">            time_step (int): The time interval (in minutes) for the simulation steps.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">power_supply</span> <span class="o">=</span> <span class="n">power_supply</span>  <span class="c1"># Total power supply available for allocation.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span> <span class="o">=</span> <span class="n">time_step</span>  <span class="c1"># Duration of each simulation step in minutes.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">queued_requests</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">AvailableFlexibilityRequest</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># List of requests that are queued for charging.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pending_requests</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">AvailableFlexibilityRequest</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Requests that have not yet arrived.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">completed_requests</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">AvailableFlexibilityRequest</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Requests that have been fully charged.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>  <span class="c1"># Set the simulation&#39;s current time to now.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>  <span class="c1"># Record the start time of the simulation.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rejected_requests</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># List to track rejected requests.</span>
+        
+
+
+
+<div class="viewcode-block" id="FlexibilitySimulation.flexibility_demand">
+<a class="viewcode-back" href="../FlexSimulation.html#FlexSimulation.FlexibilitySimulation.flexibility_demand">[docs]</a>
+    <span class="k">def</span> <span class="nf">flexibility_demand</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>       
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates total flexibility demand based on queued requests.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: The total flexibility demand, which is the amount of power required beyond the available supply.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">total_power_demand</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># Initialize total power demand to zero.</span>
+        <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">queued_requests</span><span class="p">:</span>  <span class="c1"># Loop through all queued requests.</span>
+            <span class="n">charged_time_in_minutes</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">charged_time</span>  <span class="c1"># Get the time already charged.</span>
+            <span class="n">charged_time_delta</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="n">charged_time_in_minutes</span><span class="p">)</span> <span class="c1"># Convert to timedelta.</span>
+            <span class="c1"># Check if the request is fully charged or if the requested leave time is exceeded.</span>
+            <span class="k">if</span> <span class="n">charged_time_delta</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">requested_leave_time</span> <span class="o">-</span> <span class="n">request</span><span class="o">.</span><span class="n">arrival_time</span><span class="p">)</span> <span class="ow">or</span> <span class="n">request</span><span class="o">.</span><span class="n">requested_energy</span> <span class="o">&lt;=</span> <span class="n">request</span><span class="o">.</span><span class="n">charged_energy</span><span class="p">:</span> 
+                <span class="k">continue</span> <span class="c1"># Skip this request if it&#39;s fully charged or the leave time is exceeded.</span>
+            <span class="c1"># Calculate the remaining time for charging.</span>
+            <span class="n">remaining_time</span> <span class="o">=</span> <span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">requested_leave_time</span> <span class="o">-</span> <span class="n">request</span><span class="o">.</span><span class="n">arrival_time</span> <span class="o">-</span> <span class="n">charged_time_delta</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mi">60</span>
+            <span class="k">if</span> <span class="n">remaining_time</span> <span class="o">&lt;=</span> <span class="mi">15</span><span class="p">:</span> <span class="c1"># If less than or equal to 15 minutes left,</span>
+                <span class="c1"># Calculate required power to meet the requested energy within the remaining time.</span>
+                <span class="n">required_power</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">evse_id</span><span class="o">.</span><span class="n">nominal_power_cp</span><span class="p">,</span> <span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">requested_energy</span> <span class="o">-</span> <span class="n">request</span><span class="o">.</span><span class="n">charged_energy</span><span class="p">)</span> <span class="o">/</span> <span class="p">((</span><span class="n">request</span><span class="o">.</span><span class="n">requested_leave_time</span> <span class="o">-</span> <span class="n">request</span><span class="o">.</span><span class="n">arrival_time</span> <span class="o">-</span> <span class="n">charged_time_delta</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mi">3600</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">required_power</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">evse_id</span><span class="o">.</span><span class="n">nominal_power_cp</span> <span class="c1"># Use nominal power if enough time is available.</span>
+            <span class="n">total_power_demand</span> <span class="o">+=</span> <span class="n">required_power</span> <span class="c1"># Accumulate total power demand.</span>
+        <span class="c1"># Return the flexibility demand as the difference between total demand and available power supply.</span>
+        <span class="n">flexibility_demand</span> <span class="o">=</span> <span class="n">total_power_demand</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_supply</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">flexibility_demand</span><span class="p">)</span> <span class="c1"># Ensure non-negative demand.</span></div>
+
+    
+    
+    
+    
+
+<div class="viewcode-block" id="FlexibilitySimulation.flexibility_supply">
+<a class="viewcode-back" href="../FlexSimulation.html#FlexSimulation.FlexibilitySimulation.flexibility_supply">[docs]</a>
+    <span class="k">def</span> <span class="nf">flexibility_supply</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculates total flexibility supply available from queued requests.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: Total available flexibility supply.</span>
+<span class="sd">        &quot;&quot;&quot;</span>      
+        <span class="c1"># Calculate the total flexibility supply from all queued requests using the FlexibilityCalculator.</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="n">FlexibilityCalculator</span><span class="o">.</span><span class="n">calculate_power_flexibility</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">evse_id</span><span class="o">.</span><span class="n">nominal_power_cp</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">queued_requests</span>
+        <span class="p">)</span></div>
+
+        
+        
+        
+        
+    
+<div class="viewcode-block" id="FlexibilitySimulation.add_request">
+<a class="viewcode-back" href="../FlexSimulation.html#FlexSimulation.FlexibilitySimulation.add_request">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">AvailableFlexibilityRequest</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adds a new charging request to the queue.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            request (AvailableFlexibilityRequest): The charging request to be added.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">power_supplied_per_timestep</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># Initialize the list to track power supplied over time.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">queued_requests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>  <span class="c1"># Add the request to the queue.</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Request </span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">session_id</span><span class="si">}</span><span class="s2"> has been accepted.&quot;</span><span class="p">)</span></div>
+
+        
+        
+        
+        
+        
+
+<div class="viewcode-block" id="FlexibilitySimulation.reject_new_request">
+<a class="viewcode-back" href="../FlexSimulation.html#FlexSimulation.FlexibilitySimulation.reject_new_request">[docs]</a>
+    <span class="k">def</span> <span class="nf">reject_new_request</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Rejects the latest charging request in the queue due to insufficient flexibility.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">queued_requests</span><span class="p">:</span>  <span class="c1"># Check if there are any queued requests.</span>
+            <span class="c1"># Log the rejection and details of the request.</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Rejecting request due to insufficient flexibility: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">queued_requests</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">session_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;It has been charged with: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">queued_requests</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">charged_energy</span><span class="si">}</span><span class="s2"> kW energy. However the requested energy was: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">queued_requests</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">requested_energy</span><span class="si">}</span><span class="s2"> kW&quot;</span><span class="p">)</span>
+            <span class="n">req</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">queued_requests</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>  <span class="c1"># Remove the last request from the queue.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rejected_requests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>  <span class="c1"># Add it to the list of rejected requests.</span></div>
+
+            
+            
+            
+            
+            
+
+<div class="viewcode-block" id="FlexibilitySimulation.allocate_power">
+<a class="viewcode-back" href="../FlexSimulation.html#FlexSimulation.FlexibilitySimulation.allocate_power">[docs]</a>
+    <span class="k">def</span> <span class="nf">allocate_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">AvailableFlexibilityRequest</span><span class="p">,</span> <span class="n">requested_power</span><span class="p">,</span> <span class="n">allocated_power</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Allocates power to an EV and updates its charging status.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            request (AvailableFlexibilityRequest): The charging request to allocate power to.</span>
+<span class="sd">            requested_power (float): The power requested by the EV.</span>
+<span class="sd">            allocated_power (float): The power allocated to the EV.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">charged_time_delta</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">charged_time</span><span class="p">)</span>  <span class="c1"># Get the charged time as timedelta.</span>
+        <span class="n">remaining_time</span> <span class="o">=</span> <span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">requested_leave_time</span> <span class="o">-</span> <span class="n">request</span><span class="o">.</span><span class="n">arrival_time</span> <span class="o">-</span> <span class="n">charged_time_delta</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mi">3600</span>  <span class="c1"># Calculate remaining time until leave.</span>
+        <span class="k">if</span> <span class="n">remaining_time</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># If there is still time left for charging,</span>
+            <span class="n">potential_energy_charged</span> <span class="o">=</span> <span class="n">allocated_power</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span> <span class="o">/</span> <span class="mi">60</span><span class="p">)</span>  <span class="c1"># Calculate potential energy charged in the current time step.</span>
+            <span class="c1"># Check if charging will exceed requested energy.</span>
+            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">charged_energy</span> <span class="o">+</span> <span class="n">potential_energy_charged</span> <span class="o">&gt;</span> <span class="n">request</span><span class="o">.</span><span class="n">requested_energy</span><span class="p">:</span>
+                <span class="n">charging_complete_time</span> <span class="o">=</span> <span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">requested_energy</span> <span class="o">-</span> <span class="n">request</span><span class="o">.</span><span class="n">charged_energy</span><span class="p">)</span> <span class="o">/</span> <span class="n">allocated_power</span>  <span class="c1"># Calculate time to fully charge.</span>
+                <span class="n">potential_energy_charged</span> <span class="o">=</span> <span class="n">allocated_power</span> <span class="o">*</span> <span class="p">(</span><span class="n">charging_complete_time</span><span class="p">)</span>  <span class="c1"># Adjust to the energy needed to fully charge.</span>
+                <span class="n">request</span><span class="o">.</span><span class="n">charged_energy</span> <span class="o">+=</span> <span class="n">potential_energy_charged</span>  <span class="c1"># Update charged energy.</span>
+                <span class="n">request</span><span class="o">.</span><span class="n">power_supplied_per_timestep</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">allocated_power</span><span class="p">)</span>  <span class="c1"># Record the power supplied in this timestep.</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Allocated </span><span class="si">{</span><span class="n">allocated_power</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> kW to </span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">session_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># Log the allocation.</span>
+                <span class="c1"># Check if the request is fully charged.</span>
+                <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">charged_energy</span> <span class="o">&gt;=</span> <span class="n">request</span><span class="o">.</span><span class="n">requested_energy</span><span class="p">:</span>
+                    <span class="n">time_of_completion</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_time</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="p">(</span><span class="n">charging_complete_time</span> <span class="o">*</span> <span class="mi">60</span><span class="p">))</span>  <span class="c1"># Calculate completion time.</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">session_id</span><span class="si">}</span><span class="s2"> is fully charged with </span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">charged_energy</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> kWh. At time </span><span class="si">{</span><span class="n">time_of_completion</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># Log completion.</span>
+                    <span class="c1"># Mark the request as complete and remove it from the queue.</span>
+                    <span class="n">request</span><span class="o">.</span><span class="n">charge_complete</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">queued_requests</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">completed_requests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>  <span class="c1"># Add to completed requests.</span>
+                <span class="k">return</span>  <span class="c1"># Exit function since power allocation is complete.</span>
+
+            <span class="n">request</span><span class="o">.</span><span class="n">charged_energy</span> <span class="o">+=</span> <span class="n">potential_energy_charged</span>  <span class="c1"># Update charged energy with potential energy.</span>
+            <span class="n">request</span><span class="o">.</span><span class="n">power_supplied_per_timestep</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">allocated_power</span><span class="p">)</span>  <span class="c1"># Record the power supplied.</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Allocated </span><span class="si">{</span><span class="n">allocated_power</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> kW to </span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">session_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># Log the allocation.</span>
+            <span class="c1"># Check if the request is fully charged after this allocation.</span>
+            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">charged_energy</span> <span class="o">&gt;=</span> <span class="n">request</span><span class="o">.</span><span class="n">requested_energy</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">session_id</span><span class="si">}</span><span class="s2"> is fully charged with </span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">charged_energy</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> kWh.&quot;</span><span class="p">)</span>  <span class="c1"># Log completion.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">queued_requests</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>  <span class="c1"># Remove from the queue.</span>
+                <span class="n">request</span><span class="o">.</span><span class="n">charge_complete</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Mark as complete.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">completed_requests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>  <span class="c1"># Add to completed requests.</span></div>
+
+
+
+
+
+
+
+<div class="viewcode-block" id="FlexibilitySimulation.allocate_flexibility_and_load_management">
+<a class="viewcode-back" href="../FlexSimulation.html#FlexSimulation.FlexibilitySimulation.allocate_flexibility_and_load_management">[docs]</a>
+    <span class="k">def</span> <span class="nf">allocate_flexibility_and_load_management</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Allocates power based on demand, flexibility, and available supply.&quot;&quot;&quot;</span>
+        <span class="n">active_requests</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">queued_requests</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">arrival_time</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_time</span> <span class="o">&lt;=</span> <span class="n">r</span><span class="o">.</span><span class="n">requested_leave_time</span><span class="p">]</span>  <span class="c1"># Filter active requests based on current time.</span>
+        
+        <span class="n">total_power_demand</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># Initialize total power demand.</span>
+        <span class="n">instantaneous_power_demand</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># Initialize instantaneous power demand.</span>
+        <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="n">active_requests</span><span class="p">:</span>  <span class="c1"># Loop through active requests.</span>
+            <span class="n">remaining_energy</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">requested_energy</span> <span class="o">-</span> <span class="n">request</span><span class="o">.</span><span class="n">charged_energy</span>  <span class="c1"># Calculate remaining energy needed.</span>
+            <span class="n">remaining_time</span> <span class="o">=</span> <span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">requested_leave_time</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_time</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mi">3600</span>  <span class="c1"># Calculate remaining time until leave.</span>
+            
+            <span class="k">if</span> <span class="n">remaining_time</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># If there is still time left for charging,</span>
+                <span class="c1"># Calculate required power to charge fully within remaining time.</span>
+                <span class="n">required_power</span> <span class="o">=</span> <span class="n">remaining_energy</span> <span class="o">/</span> <span class="n">remaining_time</span>
+                
+                <span class="c1"># Ensure the actual power demand is capped by the nominal power of the charging point.</span>
+                <span class="n">actual_power_demand</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">evse_id</span><span class="o">.</span><span class="n">nominal_power_cp</span><span class="p">,</span> <span class="n">required_power</span><span class="p">)</span>
+                <span class="n">total_power_demand</span> <span class="o">+=</span> <span class="n">actual_power_demand</span>  <span class="c1"># Accumulate total power demand.</span>
+                
+                <span class="c1"># Instantaneous demand is the nominal power (not based on energy/time).</span>
+                <span class="n">instantaneous_power_demand</span> <span class="o">+=</span> <span class="n">request</span><span class="o">.</span><span class="n">evse_id</span><span class="o">.</span><span class="n">nominal_power_cp</span>
+        
+        <span class="c1"># Check if the total instantaneous power demand is within the available power supply.</span>
+        <span class="k">if</span> <span class="n">instantaneous_power_demand</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_supply</span><span class="p">:</span>
+            <span class="c1"># If so, allocate the nominal power to all requests.</span>
+            <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="n">active_requests</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">allocate_power</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">evse_id</span><span class="o">.</span><span class="n">nominal_power_cp</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">evse_id</span><span class="o">.</span><span class="n">nominal_power_cp</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Demand exceeds supply, applying flexibility.&quot;</span><span class="p">)</span>  <span class="c1"># Log that demand exceeds supply.</span>
+            <span class="n">flexibility_supply</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flexibility_supply</span><span class="p">()</span>  <span class="c1"># Get total flexibility supply.</span>
+            <span class="c1"># Calculate allocation factor to adjust power allocation based on flexibility.</span>
+            <span class="n">allocation_factor</span> <span class="o">=</span> <span class="p">(</span><span class="n">total_power_demand</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_supply</span><span class="p">)</span> <span class="o">/</span> <span class="n">flexibility_supply</span> <span class="k">if</span> <span class="n">flexibility_supply</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">1.0</span>
+
+            <span class="n">total_allocated_power</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># Initialize total allocated power.</span>
+            <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="n">active_requests</span><span class="p">:</span>  <span class="c1"># Loop through active requests.</span>
+                <span class="c1"># Calculate requested power based on remaining energy and time.</span>
+                <span class="n">requested_power</span> <span class="o">=</span> <span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">requested_energy</span> <span class="o">-</span> <span class="n">request</span><span class="o">.</span><span class="n">charged_energy</span><span class="p">)</span> <span class="o">/</span> <span class="p">((</span><span class="n">request</span><span class="o">.</span><span class="n">requested_leave_time</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_time</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">/</span> <span class="mi">3600</span><span class="p">)</span>
+                <span class="n">power_flex</span> <span class="o">=</span> <span class="n">FlexibilityCalculator</span><span class="o">.</span><span class="n">calculate_power_flexibility</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">evse_id</span><span class="o">.</span><span class="n">nominal_power_cp</span><span class="p">)</span>  <span class="c1"># Calculate flexibility contribution.</span>
+                <span class="c1"># Determine the allocated power, ensuring it&#39;s non-negative and does not exceed supply.</span>
+                <span class="n">allocated_power</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">requested_power</span> <span class="o">-</span> <span class="p">(</span><span class="n">allocation_factor</span> <span class="o">*</span> <span class="n">power_flex</span><span class="p">))</span>
+                <span class="n">allocated_power</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">allocated_power</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">power_supply</span> <span class="o">-</span> <span class="n">total_allocated_power</span><span class="p">,</span> <span class="n">request</span><span class="o">.</span><span class="n">evse_id</span><span class="o">.</span><span class="n">nominal_power_cp</span><span class="p">)</span>
+
+                <span class="c1"># Calculate the flexibility contribution based on the allocated power.</span>
+                <span class="n">flexibility_contribution</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">evse_id</span><span class="o">.</span><span class="n">nominal_power_cp</span> <span class="o">-</span> <span class="n">allocated_power</span>
+                <span class="k">if</span> <span class="n">flexibility_contribution</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># If there is a contribution,</span>
+                    <span class="n">request</span><span class="o">.</span><span class="n">flexibility_contribution_per_timestep</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">flexibility_contribution</span> <span class="o">*</span> <span class="mf">0.25</span><span class="p">)</span>  <span class="c1"># Log the contribution for the timestep.</span>
+                    <span class="n">request</span><span class="o">.</span><span class="n">flexibility_contribution</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">flexibility_contribution_per_timestep</span><span class="p">)</span>  <span class="c1"># Update total flexibility contribution.</span>
+
+                <span class="n">total_allocated_power</span> <span class="o">+=</span> <span class="n">allocated_power</span>  <span class="c1"># Update total allocated power.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">allocate_power</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">requested_power</span><span class="p">,</span> <span class="n">allocated_power</span><span class="p">)</span>  <span class="c1"># Allocate power to the request.</span></div>
+
+
+
+
+
+<div class="viewcode-block" id="FlexibilitySimulation.update_for_next_timestep">
+<a class="viewcode-back" href="../FlexSimulation.html#FlexSimulation.FlexibilitySimulation.update_for_next_timestep">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_for_next_timestep</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Moves the simulation to the next time step and logs progress.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_time</span> <span class="o">+=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">)</span>  <span class="c1"># Advance the current time by the timestep.</span>
+        <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">queued_requests</span><span class="p">:</span>  <span class="c1"># Update the charged time for all queued requests.</span>
+            <span class="n">request</span><span class="o">.</span><span class="n">charged_time</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Time: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">current_time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># Log the current time.</span>
+        <span class="c1"># Print current time step.</span>
+        <span class="n">current_time_step</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_time</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span><span class="p">)</span> <span class="o">/</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Current Time Step: </span><span class="si">{</span><span class="n">current_time_step</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># Log the current timestep.</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-----&quot;</span><span class="p">)</span>  <span class="c1"># Separator for clarity.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_power_supply</span><span class="p">()</span>  <span class="c1"># Update the power supply for the next timestep. Uncomment this line to enable random power supply updates.</span></div>
+
+
+
+
+
+<div class="viewcode-block" id="FlexibilitySimulation.update_power_supply">
+<a class="viewcode-back" href="../FlexSimulation.html#FlexSimulation.FlexibilitySimulation.update_power_supply">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_power_supply</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Updates the power supply to a random value within a specified range.&quot;&quot;&quot;</span>
+        <span class="n">random_power_supply</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">40</span><span class="p">))</span>  <span class="c1"># Generate a random power supply value.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">power_supply</span> <span class="o">=</span> <span class="n">random_power_supply</span>  <span class="c1"># Update the power supply.</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Power Supply Updated to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">power_supply</span><span class="si">}</span><span class="s2"> kW&quot;</span><span class="p">)</span>  <span class="c1"># Log the updated supply.</span></div>
+
+
+
+
+
+
+<div class="viewcode-block" id="FlexibilitySimulation.handle_new_requests">
+<a class="viewcode-back" href="../FlexSimulation.html#FlexSimulation.FlexibilitySimulation.handle_new_requests">[docs]</a>
+    <span class="k">def</span> <span class="nf">handle_new_requests</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Checks and adds any pending requests that have arrived.&quot;&quot;&quot;</span>
+        <span class="n">arrived_requests</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pending_requests</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">arrival_time</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_time</span><span class="p">]</span>  <span class="c1"># Filter requests that have arrived.</span>
+        <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="n">arrived_requests</span><span class="p">:</span>  <span class="c1"># Loop through all arrived requests.</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New request added to the queue: </span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">session_id</span><span class="si">}</span><span class="s2"> at </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">current_time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># Log the addition.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>  <span class="c1"># Add the request to the queue.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pending_requests</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>  <span class="c1"># Remove it from the pending list.</span></div>
+
+            
+            
+            
+            
+<div class="viewcode-block" id="FlexibilitySimulation.flex_contributions">
+<a class="viewcode-back" href="../FlexSimulation.html#FlexSimulation.FlexibilitySimulation.flex_contributions">[docs]</a>
+    <span class="k">def</span> <span class="nf">flex_contributions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Logs the flexibility contributions of all completed requests.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">completed_requests</span><span class="p">:</span>  <span class="c1"># Loop through completed requests.</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Flexibility contribution of </span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">session_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">flexibility_contribution</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> kW&quot;</span><span class="p">)</span>  <span class="c1"># Log flexibility contributions.</span></div>
+
+
+
+
+
+<div class="viewcode-block" id="FlexibilitySimulation.run_simulation">
+<a class="viewcode-back" href="../FlexSimulation.html#FlexSimulation.FlexibilitySimulation.run_simulation">[docs]</a>
+    <span class="k">def</span> <span class="nf">run_simulation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">requests</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">AvailableFlexibilityRequest</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Runs the full simulation and logs charging progress.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            requests (List[AvailableFlexibilityRequest]): List of charging requests to simulate.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pending_requests</span> <span class="o">=</span> <span class="n">requests</span><span class="p">[:]</span>  <span class="c1"># Initially, all requests are pending.</span>
+
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">queued_requests</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">pending_requests</span><span class="p">:</span>  <span class="c1"># Continue until all requests are processed.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">handle_new_requests</span><span class="p">()</span>  <span class="c1"># Check and add new requests.</span>
+
+            <span class="n">active_requests</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">queued_requests</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">arrival_time</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_time</span> <span class="o">&lt;=</span> <span class="n">r</span><span class="o">.</span><span class="n">requested_leave_time</span><span class="p">]</span>  <span class="c1"># Filter active requests based on current time.</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">active_requests</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">pending_requests</span><span class="p">:</span>  <span class="c1"># If no active requests are present,</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No active charging requests. Ending simulation.&quot;</span><span class="p">)</span>  <span class="c1"># Log end of simulation.</span>
+                <span class="k">break</span>  <span class="c1"># Exit the loop.</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flexibility_demand</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="kc">False</span><span class="p">:</span>  <span class="c1"># Placeholder for external flexibility check.</span>
+                <span class="n">flexibility_demand</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flexibility_demand</span><span class="p">()</span>  <span class="c1"># Get the current flexibility demand.</span>
+                <span class="n">flexibility_supply</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flexibility_supply</span><span class="p">()</span>  <span class="c1"># Get the current flexibility supply.</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Flexibility Demand &quot;</span><span class="p">,</span> <span class="n">flexibility_demand</span><span class="p">)</span>  <span class="c1"># Log the flexibility demand.</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Flexibility Supply &quot;</span><span class="p">,</span> <span class="n">flexibility_supply</span><span class="p">)</span>  <span class="c1"># Log the flexibility supply.</span>
+                <span class="k">if</span> <span class="n">flexibility_demand</span> <span class="o">&gt;</span> <span class="n">flexibility_supply</span><span class="p">:</span>  <span class="c1"># If demand exceeds supply,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">reject_new_request</span><span class="p">()</span>  <span class="c1"># Reject the latest request.</span>
+                    <span class="k">continue</span>  <span class="c1"># Skip to the next iteration.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">allocate_flexibility_and_load_management</span><span class="p">()</span>  <span class="c1"># Allocate power based on flexibility.</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">allocate_flexibility_and_load_management</span><span class="p">()</span>  <span class="c1"># Allocate power based on current state.</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_for_next_timestep</span><span class="p">()</span>  <span class="c1"># Move to the next timestep.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flex_contributions</span><span class="p">()</span>  <span class="c1"># Log flexibility contributions of completed requests.</span></div>
+</div>
+
+
+
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">num_connectors</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">connectors</span> <span class="o">=</span> <span class="p">[</span><span class="n">ChargingPoint</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_connectors</span><span class="p">)]</span>
+    <span class="n">connectors_in_use</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">power_supply</span> <span class="o">=</span> <span class="mf">40.0</span>
+    <span class="n">time_step</span> <span class="o">=</span> <span class="mi">15</span>
+
+    <span class="n">car1</span> <span class="o">=</span> <span class="n">CarSpecs</span><span class="p">(</span><span class="n">make</span><span class="o">=</span><span class="s2">&quot;Tesla&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;Model S&quot;</span><span class="p">,</span> <span class="n">year</span><span class="o">=</span><span class="mi">2022</span><span class="p">,</span> <span class="n">battery_capacity_in_kwh</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">initial_soc</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">request1</span> <span class="o">=</span> <span class="n">AvailableFlexibilityRequest</span><span class="p">(</span><span class="s2">&quot;user1&quot;</span><span class="p">,</span> <span class="n">connectors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mf">11.0</span><span class="p">,</span><span class="mi">90</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="n">car1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">car2</span> <span class="o">=</span> <span class="n">CarSpecs</span><span class="p">(</span><span class="n">make</span><span class="o">=</span><span class="s2">&quot;Tesla&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;Model X&quot;</span><span class="p">,</span> <span class="n">year</span><span class="o">=</span><span class="mi">2022</span><span class="p">,</span> <span class="n">battery_capacity_in_kwh</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">initial_soc</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">request2</span> <span class="o">=</span> <span class="n">AvailableFlexibilityRequest</span><span class="p">(</span><span class="s2">&quot;user2&quot;</span><span class="p">,</span> <span class="n">connectors</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mf">11.0</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span>  <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="n">car2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">car3</span> <span class="o">=</span> <span class="n">CarSpecs</span><span class="p">(</span><span class="n">make</span><span class="o">=</span><span class="s2">&quot;Tesla&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;Model Z&quot;</span><span class="p">,</span> <span class="n">year</span><span class="o">=</span><span class="mi">2022</span><span class="p">,</span> <span class="n">battery_capacity_in_kwh</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">initial_soc</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">request3</span> <span class="o">=</span> <span class="n">AvailableFlexibilityRequest</span><span class="p">(</span><span class="s2">&quot;user3&quot;</span><span class="p">,</span> <span class="n">connectors</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mf">11.0</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span>  <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="n">car3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">car4</span> <span class="o">=</span> <span class="n">CarSpecs</span><span class="p">(</span><span class="n">make</span><span class="o">=</span><span class="s2">&quot;Tesla&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;Model A&quot;</span><span class="p">,</span> <span class="n">year</span><span class="o">=</span><span class="mi">2022</span><span class="p">,</span> <span class="n">battery_capacity_in_kwh</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">initial_soc</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">request4</span> <span class="o">=</span> <span class="n">AvailableFlexibilityRequest</span><span class="p">(</span><span class="s2">&quot;user4&quot;</span><span class="p">,</span> <span class="n">connectors</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="mf">11.0</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span>  <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="n">car4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    
+    <span class="n">simulation</span> <span class="o">=</span> <span class="n">FlexibilitySimulation</span><span class="p">(</span><span class="n">power_supply</span><span class="p">,</span> <span class="n">time_step</span><span class="p">)</span>
+    <span class="n">requests</span> <span class="o">=</span> <span class="p">[</span><span class="n">request1</span><span class="p">,</span> <span class="n">request2</span><span class="p">,</span> <span class="n">request3</span><span class="p">,</span> <span class="n">request4</span><span class="p">]</span>
+    <span class="c1"># create a copy of the requests</span>
+    <span class="n">copy_requests</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">requests</span><span class="p">)</span>
+
+    <span class="n">simulation</span><span class="o">.</span><span class="n">run_simulation</span><span class="p">(</span><span class="n">copy_requests</span><span class="p">)</span>
+        
+
+    <span class="n">PlottingUtils</span><span class="o">.</span><span class="n">plot_power_supplied</span><span class="p">(</span><span class="n">simulation</span><span class="o">.</span><span class="n">completed_requests</span><span class="p">)</span>
+    <span class="n">PlottingUtils</span><span class="o">.</span><span class="n">plot_flexibility_contribution</span><span class="p">(</span><span class="n">simulation</span><span class="o">.</span><span class="n">completed_requests</span><span class="p">)</span>
+    
+
+
+<span class="c1"># Uncomment the following code to run the simulation with random requests generated by the FlexUtils module dynamically.</span>
+<span class="c1"># if __name__ == &#39;__main__&#39;:</span>
+<span class="c1">#     num_connectors = 4</span>
+<span class="c1">#     connectors = [ChargingPoint(i + 1) for i in range(num_connectors)]</span>
+<span class="c1">#     power_supply = 40.0</span>
+<span class="c1">#     time_step = 15</span>
+<span class="c1">#     num_requests = 5  # Specify the number of random requests to generate</span>
+
+<span class="c1">#     # Generate random charging requests</span>
+<span class="c1">#     requests = generate_random_requests(num_requests, connectors)</span>
+
+<span class="c1">#     # Run the simulation</span>
+<span class="c1">#     simulation = FlexibilitySimulation(power_supply, time_step)</span>
+<span class="c1">#     simulation.run_simulation(requests)</span>
+
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Usman.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

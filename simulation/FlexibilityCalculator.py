@@ -39,3 +39,4 @@ class FlexibilityCalculator:
             # Scale the power flexibility based on available time flexibility
             power_flexibility = (time_flexibility / 15) * nominal_power_cp
             return power_flexibility
+

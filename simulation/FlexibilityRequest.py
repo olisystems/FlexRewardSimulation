@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 from CarSpecs import *
 from ChargingPoint import *
@@ -9,7 +9,7 @@ class AvailableFlexibilityRequest:
         session_id: str,
         evse_id: ChargingPoint,
         requested_energy: float,
-        requested_leave_time: datetime,
+        requested_leave_time: float,
         arrival_time: datetime,
         car_specs: CarSpecs,
         charged_energy: float,
@@ -20,7 +20,7 @@ class AvailableFlexibilityRequest:
         self.__evse_id = evse_id
         self.__car_specs = car_specs
         self.__requested_energy = requested_energy
-        self.__requested_leave_time = requested_leave_time
+        self.__requested_leave_time =timedelta(minutes=requested_leave_time)+arrival_time
         self.__arrival_time = arrival_time
         self.__target_soc = car_specs.initial_soc + ((requested_energy / car_specs.battery_capacity_in_kwh)*100)
         self.__charged_energy = charged_energy
@@ -106,14 +106,20 @@ class AvailableFlexibilityRequest:
     def charged_energy(self, charged_energy):
         self.__charged_energy = charged_energy
         
+    @charge_complete.setter
+    def charge_complete(self, charge_complete):
+        self.__charge_complete = charge_complete
+        
     @flexibility_contribution.setter
     def flexibility_contribution(self, contribution):
         self.__flexibility_contribution = contribution
         
     # Validation for requested energy
-    def __validate_requested_energy(self):
+    def __validate_requested_energy(self):      
         if self.__requested_energy <= 0:
             raise ValueError("Requested energy must be greater than 0.")
+        elif (self.__requested_energy/((self.__requested_leave_time-self.__arrival_time).total_seconds()/(60*60))) > self.__evse_id.nominal_power_cp:
+            raise ValueError("Requested energy must be less than the maximum power of the charging point.")
 
     # Validation for state of charge (current_soc)
     def __validate_soc(self):

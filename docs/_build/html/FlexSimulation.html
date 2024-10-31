@@ -1,0 +1,242 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlexSimulation module &mdash; Flex Simulation 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="FlexUtils module" href="FlexUtils.html" />
+    <link rel="prev" title="ChargingPoint module" href="ChargingPoint.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Flex Simulation
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">simulation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="CarSpecs.html">CarSpecs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ChargingPoint.html">ChargingPoint module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">FlexSimulation module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#FlexSimulation.FlexibilitySimulation"><code class="docutils literal notranslate"><span class="pre">FlexibilitySimulation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#FlexSimulation.FlexibilitySimulation.add_request"><code class="docutils literal notranslate"><span class="pre">FlexibilitySimulation.add_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FlexSimulation.FlexibilitySimulation.allocate_flexibility_and_load_management"><code class="docutils literal notranslate"><span class="pre">FlexibilitySimulation.allocate_flexibility_and_load_management()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FlexSimulation.FlexibilitySimulation.allocate_power"><code class="docutils literal notranslate"><span class="pre">FlexibilitySimulation.allocate_power()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FlexSimulation.FlexibilitySimulation.flex_contributions"><code class="docutils literal notranslate"><span class="pre">FlexibilitySimulation.flex_contributions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FlexSimulation.FlexibilitySimulation.flexibility_demand"><code class="docutils literal notranslate"><span class="pre">FlexibilitySimulation.flexibility_demand()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FlexSimulation.FlexibilitySimulation.flexibility_supply"><code class="docutils literal notranslate"><span class="pre">FlexibilitySimulation.flexibility_supply()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FlexSimulation.FlexibilitySimulation.handle_new_requests"><code class="docutils literal notranslate"><span class="pre">FlexibilitySimulation.handle_new_requests()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FlexSimulation.FlexibilitySimulation.reject_new_request"><code class="docutils literal notranslate"><span class="pre">FlexibilitySimulation.reject_new_request()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FlexSimulation.FlexibilitySimulation.run_simulation"><code class="docutils literal notranslate"><span class="pre">FlexibilitySimulation.run_simulation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FlexSimulation.FlexibilitySimulation.update_for_next_timestep"><code class="docutils literal notranslate"><span class="pre">FlexibilitySimulation.update_for_next_timestep()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#FlexSimulation.FlexibilitySimulation.update_power_supply"><code class="docutils literal notranslate"><span class="pre">FlexibilitySimulation.update_power_supply()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="FlexUtils.html">FlexUtils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FlexibilityCalculator.html">FlexibilityCalculator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FlexibilityRequest.html">FlexibilityRequest module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PlottingUtils.html">PlottingUtils module</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Flex Simulation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">simulation</a></li>
+      <li class="breadcrumb-item active">FlexSimulation module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/FlexSimulation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-FlexSimulation">
+<span id="flexsimulation-module"></span><h1>FlexSimulation module<a class="headerlink" href="#module-FlexSimulation" title="Link to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="FlexSimulation.FlexibilitySimulation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">FlexSimulation.</span></span><span class="sig-name descname"><span class="pre">FlexibilitySimulation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">power_supply</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FlexSimulation.html#FlexibilitySimulation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FlexSimulation.FlexibilitySimulation" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="FlexSimulation.FlexibilitySimulation.add_request">
+<span class="sig-name descname"><span class="pre">add_request</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FlexibilityRequest.html#FlexibilityRequest.AvailableFlexibilityRequest" title="FlexibilityRequest.AvailableFlexibilityRequest"><span class="pre">AvailableFlexibilityRequest</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FlexSimulation.html#FlexibilitySimulation.add_request"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FlexSimulation.FlexibilitySimulation.add_request" title="Link to this definition"></a></dt>
+<dd><p>Adds a new charging request to the queue.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>request</strong> (<a class="reference internal" href="FlexibilityRequest.html#FlexibilityRequest.AvailableFlexibilityRequest" title="FlexibilityRequest.AvailableFlexibilityRequest"><em>AvailableFlexibilityRequest</em></a>) – The charging request to be added.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FlexSimulation.FlexibilitySimulation.allocate_flexibility_and_load_management">
+<span class="sig-name descname"><span class="pre">allocate_flexibility_and_load_management</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FlexSimulation.html#FlexibilitySimulation.allocate_flexibility_and_load_management"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FlexSimulation.FlexibilitySimulation.allocate_flexibility_and_load_management" title="Link to this definition"></a></dt>
+<dd><p>Allocates power based on demand, flexibility, and available supply.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FlexSimulation.FlexibilitySimulation.allocate_power">
+<span class="sig-name descname"><span class="pre">allocate_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="FlexibilityRequest.html#FlexibilityRequest.AvailableFlexibilityRequest" title="FlexibilityRequest.AvailableFlexibilityRequest"><span class="pre">AvailableFlexibilityRequest</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">requested_power</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allocated_power</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FlexSimulation.html#FlexibilitySimulation.allocate_power"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FlexSimulation.FlexibilitySimulation.allocate_power" title="Link to this definition"></a></dt>
+<dd><p>Allocates power to an EV and updates its charging status.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>request</strong> (<a class="reference internal" href="FlexibilityRequest.html#FlexibilityRequest.AvailableFlexibilityRequest" title="FlexibilityRequest.AvailableFlexibilityRequest"><em>AvailableFlexibilityRequest</em></a>) – The charging request to allocate power to.</p></li>
+<li><p><strong>requested_power</strong> (<em>float</em>) – The power requested by the EV.</p></li>
+<li><p><strong>allocated_power</strong> (<em>float</em>) – The power allocated to the EV.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FlexSimulation.FlexibilitySimulation.flex_contributions">
+<span class="sig-name descname"><span class="pre">flex_contributions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FlexSimulation.html#FlexibilitySimulation.flex_contributions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FlexSimulation.FlexibilitySimulation.flex_contributions" title="Link to this definition"></a></dt>
+<dd><p>Logs the flexibility contributions of all completed requests.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FlexSimulation.FlexibilitySimulation.flexibility_demand">
+<span class="sig-name descname"><span class="pre">flexibility_demand</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FlexSimulation.html#FlexibilitySimulation.flexibility_demand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FlexSimulation.FlexibilitySimulation.flexibility_demand" title="Link to this definition"></a></dt>
+<dd><p>Calculates total flexibility demand based on queued requests.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The total flexibility demand, which is the amount of power required beyond the available supply.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FlexSimulation.FlexibilitySimulation.flexibility_supply">
+<span class="sig-name descname"><span class="pre">flexibility_supply</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FlexSimulation.html#FlexibilitySimulation.flexibility_supply"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FlexSimulation.FlexibilitySimulation.flexibility_supply" title="Link to this definition"></a></dt>
+<dd><p>Calculates total flexibility supply available from queued requests.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Total available flexibility supply.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FlexSimulation.FlexibilitySimulation.handle_new_requests">
+<span class="sig-name descname"><span class="pre">handle_new_requests</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FlexSimulation.html#FlexibilitySimulation.handle_new_requests"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FlexSimulation.FlexibilitySimulation.handle_new_requests" title="Link to this definition"></a></dt>
+<dd><p>Checks and adds any pending requests that have arrived.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FlexSimulation.FlexibilitySimulation.reject_new_request">
+<span class="sig-name descname"><span class="pre">reject_new_request</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FlexSimulation.html#FlexibilitySimulation.reject_new_request"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FlexSimulation.FlexibilitySimulation.reject_new_request" title="Link to this definition"></a></dt>
+<dd><p>Rejects the latest charging request in the queue due to insufficient flexibility.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FlexSimulation.FlexibilitySimulation.run_simulation">
+<span class="sig-name descname"><span class="pre">run_simulation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">requests</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="FlexibilityRequest.html#FlexibilityRequest.AvailableFlexibilityRequest" title="FlexibilityRequest.AvailableFlexibilityRequest"><span class="pre">AvailableFlexibilityRequest</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FlexSimulation.html#FlexibilitySimulation.run_simulation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FlexSimulation.FlexibilitySimulation.run_simulation" title="Link to this definition"></a></dt>
+<dd><p>Runs the full simulation and logs charging progress.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>requests</strong> (<em>List</em><em>[</em><a class="reference internal" href="FlexibilityRequest.html#FlexibilityRequest.AvailableFlexibilityRequest" title="FlexibilityRequest.AvailableFlexibilityRequest"><em>AvailableFlexibilityRequest</em></a><em>]</em>) – List of charging requests to simulate.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FlexSimulation.FlexibilitySimulation.update_for_next_timestep">
+<span class="sig-name descname"><span class="pre">update_for_next_timestep</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FlexSimulation.html#FlexibilitySimulation.update_for_next_timestep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FlexSimulation.FlexibilitySimulation.update_for_next_timestep" title="Link to this definition"></a></dt>
+<dd><p>Moves the simulation to the next time step and logs progress.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="FlexSimulation.FlexibilitySimulation.update_power_supply">
+<span class="sig-name descname"><span class="pre">update_power_supply</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/FlexSimulation.html#FlexibilitySimulation.update_power_supply"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#FlexSimulation.FlexibilitySimulation.update_power_supply" title="Link to this definition"></a></dt>
+<dd><p>Updates the power supply to a random value within a specified range.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ChargingPoint.html" class="btn btn-neutral float-left" title="ChargingPoint module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="FlexUtils.html" class="btn btn-neutral float-right" title="FlexUtils module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Usman.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
